@@ -1,5 +1,5 @@
 build:
-	GOOS=linux GOARCH=arm go build
+	GOOS=linux GOARCH=arm go build -o dist/fax
 
 push:
-	scp printer pi:~/printer
+	scp dist/fax pi:~/fax
