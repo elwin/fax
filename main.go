@@ -63,6 +63,13 @@ func (p *printer) print(printF func(e *escpos.Escpos) error) error {
 func run(telegramToken, devicePath string) error {
 	printer := newPrinter(devicePath)
 
+	// Just a quick connection check
+	if err := printer.print(func(e *escpos.Escpos) error {
+		return nil
+	}); err != nil {
+		return err
+	}
+
 	bot, err := tgbotapi.NewBotAPI(telegramToken)
 	if err != nil {
 		log.Panic(err)
@@ -86,7 +93,7 @@ func run(telegramToken, devicePath string) error {
 		log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
 		if _, ok := userRateLimit[update.Message.From.ID]; !ok {
-			userRateLimit[update.Message.From.ID] = rate.New(1, time.Hour)
+			userRateLimit[update.Message.From.ID] = rate.New(5, time.Hour)
 		}
 
 		var msg string
