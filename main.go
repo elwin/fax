@@ -38,12 +38,14 @@ func main() {
 				&cli.StringFlag{
 					Name:        "telegram_token",
 					Required:    true,
+					EnvVars:     []string{"TELEGRAM_TOKEN"},
 					Destination: &telegramToken,
 				},
 				&cli.StringFlag{
 					Name:        "device_path",
 					Required:    true,
 					Destination: &devicePath,
+					EnvVars:     []string{"DEVICE_PATH"},
 					DefaultText: "/dev/usb/lp0",
 				},
 			},
