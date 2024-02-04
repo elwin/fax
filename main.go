@@ -28,11 +28,12 @@ func main() {
 	var (
 		telegramToken string
 		devicePath    string
+		port          int
 		app           = &cli.App{
 			Name:  "printer",
 			Usage: "Start printer server",
 			Action: func(c *cli.Context) error {
-				return run(c.Context, telegramToken, devicePath)
+				return run(c.Context, telegramToken, devicePath, port)
 			},
 			Flags: []cli.Flag{
 				&cli.StringFlag{
@@ -46,7 +47,14 @@ func main() {
 					Required:    true,
 					Destination: &devicePath,
 					EnvVars:     []string{"DEVICE_PATH"},
-					DefaultText: "/dev/usb/lp0",
+					Value:       "/dev/usb/lp0",
+				},
+				&cli.IntFlag{
+					Name:        "port",
+					Required:    true,
+					Destination: &port,
+					EnvVars:     []string{"PORT"},
+					Value:       3030,
 				},
 			},
 		}
@@ -61,10 +69,11 @@ func main() {
 type printer struct {
 	path  string
 	mutex sync.Mutex
+	port  int
 }
 
-func newPrinter(devicePath string) *printer {
-	return &printer{path: devicePath}
+func newPrinter(devicePath string, port int) *printer {
+	return &printer{path: devicePath, port: port}
 }
 
 func (p *printer) print(printF func(e *escpos.Escpos) error) error {
@@ -99,8 +108,8 @@ func (p *printer) printText(t time.Time, username, body string) error {
 	})
 }
 
-func run(ctx context.Context, telegramToken, devicePath string) error {
-	p := newPrinter(devicePath)
+func run(ctx context.Context, telegramToken, devicePath string, port int) error {
+	p := newPrinter(devicePath, port)
 
 	// Just a quick connection check
 	if err := p.print(func(e *escpos.Escpos) error {
@@ -237,7 +246,7 @@ func runWebserver(p *printer) func(context.Context) error {
 	})
 
 	go func() {
-		if err := e.Start(":3030"); err != nil {
+		if err := e.Start(fmt.Sprintf(":%d", p.port)); err != nil {
 			log.Fatal(err)
 		}
 	}()
